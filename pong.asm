@@ -28,8 +28,8 @@ score_x db 2            ; pozitia scor
 score_y db 22
 score_value db 30h      ; valoare scor
 
-score2_x db 2           ; pozitia scor2
-score2_y db 2
+           
+score2_y db 2           ; pozitia scor2
 score2_value db 30h     ; valoare scor2
 
 
@@ -59,10 +59,16 @@ game:
     call paddle_draw
 	call paddle2_draw
 	call score_draw
-	call score2_draw
     
     ; pauza intre doua cadre ale animatiei
     call delay
+	
+	; verifica daca un jucator a ajuns la 9 puncte
+	mov bl, score_value
+	mov dl, score2_value
+	.if (bl == 39h) || (dl == 39h)
+        jmp skip
+    .endif
     
     ; sterge ce am desenat mai devreme
     call ball_erase
@@ -77,7 +83,6 @@ game:
 	
 	; update scor
 	call score_update
-    call score2_update
     
     ; continua animatia
     jmp game
@@ -103,7 +108,7 @@ score_setpos endp
 
 ; pozitioneaza cursorul la scor2
 score2_setpos proc
-    mov dl, score2_x
+    mov dl, score_x
     mov dh, score2_y
     mov bh, 0
     mov ah, 2
@@ -111,25 +116,22 @@ score2_setpos proc
     ret
 score2_setpos endp
 
-; deseneaza scor
+; deseneaza scoruri
 score_draw proc
     call score_setpos
     mov ah, 0Ah
     mov al, score_value
     mov cx, 1
-    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
-    ret
-score_draw endp
-
-; deseneaza scor2
-score2_draw proc
-    call score2_setpos
+    int 10h      	;  INT 10h / AH = 0Ah - write character only at cursor position.
+    
+	call score2_setpos
     mov ah, 0Ah
     mov al, score2_value
     mov cx, 1
-    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
-    ret
-score2_draw endp
+    int 10h  
+	ret
+score_draw endp
+
 
 ; sterge scor
 score_erase proc
@@ -151,7 +153,7 @@ score2_erase proc
     ret
 score2_erase endp
 
-; update scor
+; update scoruri
 score_update proc
 	mov al, paddle2_x
 	mov cl, paddle2_y
@@ -162,22 +164,16 @@ score_update proc
 	.if (cl == bh) && ((ah < al) || (ah > bl))
         inc score_value
     .endif
-	ret
-score_update endp
-
-; update scor2
-score2_update proc
+	
 	mov al, paddle_x
 	mov cl, paddle_y
 	mov bl, al
 	add bl, 5
-	mov ah, ball_x
-    mov bh, ball_y	
 	.if (cl == bh) && ((ah < al) || (ah > bl))
         inc score2_value
     .endif
 	ret
-score2_update endp
+score_update endp
 
 
 ; pozitioneaza cursorul pentru desenarea mingii
@@ -336,6 +332,8 @@ no_key:             ; daca nu s-a apasat nimic, mentinem directia anterioara
     .endif
     ret
 paddle_move endp
+
+skip:
 
 ; semnatura pentru bootloader
 db 510-($-start) dup(0)
