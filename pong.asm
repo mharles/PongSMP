@@ -26,9 +26,11 @@ paddle2_dx db 0          ; directia paletei 2
 
 score_x db 2            ; pozitia scor
 score_y db 22
+score_value db 30h      ; valoare scor
 
 score2_x db 2           ; pozitia scor2
 score2_y db 2
+score2_value db 30h     ; valoare scor2
 
 
 main:
@@ -66,10 +68,16 @@ game:
     call ball_erase
     call paddle_erase
 	call paddle2_erase
+	call score_erase
+	call score2_erase
 
     ; calcul miscare
     call ball_move
     call paddle_move
+	
+	; update scor
+	call score_update
+    call score2_update
     
     ; continua animatia
     jmp game
@@ -107,7 +115,7 @@ score2_setpos endp
 score_draw proc
     call score_setpos
     mov ah, 0Ah
-    mov al, '0'
+    mov al, score_value
     mov cx, 1
     int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
     ret
@@ -117,11 +125,59 @@ score_draw endp
 score2_draw proc
     call score2_setpos
     mov ah, 0Ah
-    mov al, '0'
+    mov al, score2_value
     mov cx, 1
     int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
     ret
 score2_draw endp
+
+; sterge scor
+score_erase proc
+    call score_setpos
+    mov ah, 0Ah
+    mov al, ' '
+    mov cx, 1
+    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
+    ret
+score_erase endp
+
+; sterge scor 2
+score2_erase proc
+    call score2_setpos
+    mov ah, 0Ah
+    mov al, ' '
+    mov cx, 1
+    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
+    ret
+score2_erase endp
+
+; update scor
+score_update proc
+	mov al, paddle2_x
+	mov cl, paddle2_y
+	mov bl, al
+	add bl, 5
+	mov ah, ball_x
+    mov bh, ball_y	
+	.if (cl == bh) && ((ah < al) || (ah > bl))
+        inc score_value
+    .endif
+	ret
+score_update endp
+
+; update scor2
+score2_update proc
+	mov al, paddle_x
+	mov cl, paddle_y
+	mov bl, al
+	add bl, 5
+	mov ah, ball_x
+    mov bh, ball_y	
+	.if (cl == bh) && ((ah < al) || (ah > bl))
+        inc score2_value
+    .endif
+	ret
+score2_update endp
 
 
 ; pozitioneaza cursorul pentru desenarea mingii
@@ -170,7 +226,7 @@ ball_move proc
     add al, bl
     mov ball_y, al
 
-    .if (al == 23) || (al == 0)
+    .if (al == 24) || (al == 0)
         neg ball_dy
     .endif
     ret
