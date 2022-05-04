@@ -20,6 +20,11 @@ paddle_x db 25          ; pozitia paletei
 paddle_y db 24
 paddle_dx db 0          ; directia paletei
 
+paddle2_x db 25          ; pozitia paletei 2
+paddle2_y db 0
+paddle2_dx db 0          ; directia paletei 2
+
+
 main:
     ; initializare cs, ds
     mov ax, cs
@@ -44,6 +49,7 @@ game:
     ; deseneaza
     call ball_draw
     call paddle_draw
+	call paddle2_draw
     
     ; pauza intre doua cadre ale animatiei
     call delay
@@ -51,6 +57,7 @@ game:
     ; sterge ce am desenat mai devreme
     call ball_erase
     call paddle_erase
+	call paddle2_erase
 
     ; calcul miscare
     call ball_move
@@ -142,6 +149,26 @@ paddle_draw proc
     ret
 paddle_draw endp
 
+; pozitioneaza cursorul la paleta2
+paddle2_setpos proc
+    mov dl, paddle2_x
+    mov dh, paddle2_y
+    mov bh, 0
+    mov ah, 2
+    int 10h
+    ret
+paddle2_setpos endp
+
+; deseneaza paleta2
+paddle2_draw proc
+    call paddle2_setpos
+    mov ah, 0Ah
+    mov al, '*'
+    mov cx, 5       ;  afiseaza 5 caractere
+    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
+    ret
+paddle2_draw endp
+
 ; sterge paleta (deseneaza spatii)
 paddle_erase proc
     call paddle_setpos
@@ -152,7 +179,17 @@ paddle_erase proc
     ret
 paddle_erase endp
 
-; miscarea paletei, cu tastele 'q' si 'w'
+; sterge paleta2
+paddle2_erase proc
+    call paddle2_setpos
+    mov ah, 0Ah
+    mov al, ' '
+    mov cx, 5
+    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
+    ret
+paddle2_erase endp
+
+; miscarea paletei, cu tastele 'q' si 'w', si a paletei 2 cu tastele 'a' si 's'
 paddle_move proc
     mov ah, 1
     int 16h         ;  INT 16h / AH = 01h - check for keystroke in the keyboard buffer.
@@ -168,6 +205,14 @@ paddle_move proc
     .if al == 'w'
         mov paddle_dx, 1
     .endif
+	
+	.if al == 'a'
+        mov paddle2_dx, -1
+    .endif
+
+    .if al == 's'
+        mov paddle2_dx, 1
+    .endif
     
 no_key:             ; daca nu s-a apasat nimic, mentinem directia anterioara
     
@@ -176,6 +221,13 @@ no_key:             ; daca nu s-a apasat nimic, mentinem directia anterioara
     add al, bl
     .if al <= 80-5              ; al este numar fara semn => o singura comparatie este suficienta
         mov paddle_x, al        ; (actualizam pozitia doar daca paddle_x nu iese din ecran)
+    .endif
+	
+	mov al, paddle2_x
+    mov bl, paddle2_dx
+    add al, bl
+    .if al <= 80-5              ; al is unsigned number => one comparison is enough
+        mov paddle2_x, al        ; (update the position only if paddle_x doesn't exit of the screen)
     .endif
     ret
 paddle_move endp
