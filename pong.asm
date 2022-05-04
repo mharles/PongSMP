@@ -24,6 +24,12 @@ paddle2_x db 25          ; pozitia paletei 2
 paddle2_y db 0
 paddle2_dx db 0          ; directia paletei 2
 
+score_x db 2            ; pozitia scor
+score_y db 22
+
+score2_x db 2           ; pozitia scor2
+score2_y db 2
+
 
 main:
     ; initializare cs, ds
@@ -50,6 +56,8 @@ game:
     call ball_draw
     call paddle_draw
 	call paddle2_draw
+	call score_draw
+	call score2_draw
     
     ; pauza intre doua cadre ale animatiei
     call delay
@@ -74,6 +82,47 @@ delay proc
     int 15h         ;  INT 15h / AH = 86h - BIOS wait function. 
     ret
 delay endp
+
+; pozitioneaza cursorul la scor
+score_setpos proc
+    mov dl, score_x
+    mov dh, score_y
+    mov bh, 0
+    mov ah, 2
+    int 10h         ;  INT 10h / AH = 2 - set cursor position.
+    ret
+score_setpos endp
+
+; pozitioneaza cursorul la scor2
+score2_setpos proc
+    mov dl, score2_x
+    mov dh, score2_y
+    mov bh, 0
+    mov ah, 2
+    int 10h         ;  INT 10h / AH = 2 - set cursor position.
+    ret
+score2_setpos endp
+
+; deseneaza scor
+score_draw proc
+    call score_setpos
+    mov ah, 0Ah
+    mov al, '0'
+    mov cx, 1
+    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
+    ret
+score_draw endp
+
+; deseneaza scor2
+score2_draw proc
+    call score2_setpos
+    mov ah, 0Ah
+    mov al, '0'
+    mov cx, 1
+    int 10h         ;  INT 10h / AH = 0Ah - write character only at cursor position.
+    ret
+score2_draw endp
+
 
 ; pozitioneaza cursorul pentru desenarea mingii
 ball_setpos proc
